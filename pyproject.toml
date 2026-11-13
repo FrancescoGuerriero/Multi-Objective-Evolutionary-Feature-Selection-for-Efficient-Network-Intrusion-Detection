@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evonids-comp1818"
+version = "1.0.0"
+description = "Multi-objective evolutionary feature selection for efficient network intrusion detection"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["prototype/tests"]
+addopts = "-q"

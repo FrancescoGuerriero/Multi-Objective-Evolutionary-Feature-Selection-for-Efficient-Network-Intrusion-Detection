@@ -1,0 +1,11 @@
+feature,GA,BPSO,PSO,NSGA-II,mean_frequency
+ct_srv_dst,0.8,0.8,0.6,1.0,0.80
+sbytes,0.6,0.8,0.6,0.8,0.70
+dbytes,1.0,0.6,0.4,0.4,0.60
+ct_srv_src,0.4,0.6,0.6,0.6,0.55
+smean,1.0,0.4,0.6,0.2,0.55
+ct_dst_sport_ltm,0.2,0.6,0.8,0.4,0.50
+ct_src_dport_ltm,0.6,0.6,0.4,0.2,0.45
+ct_dst_src_ltm,0.4,0.4,0.4,0.4,0.40
+dloss,0.2,0.6,0.4,0.4,0.40
+service,0.4,0.2,0.4,0.6,0.40

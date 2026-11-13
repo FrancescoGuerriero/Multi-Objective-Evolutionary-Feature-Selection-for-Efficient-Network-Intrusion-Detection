@@ -1,57 +1,77 @@
-"""Passive connection monitoring, compatible CSV replay, and append-only CSV scoring."""
 from __future__ import annotations
+
 import argparse
 import json
 import time
 from pathlib import Path
-from prototype.telemetry import snapshot_connections, event_to_dict
+
 from prototype.replay import score_csv
 from prototype.flow_watch import monitor_compatible_flows
+from prototype.telemetry import event_to_dict, snapshot_connections
 
-def build_parser():
-    parser = argparse.ArgumentParser(description="Defensive EvoNIDS Windows prototype")
-    sub = parser.add_subparsers(dest="command", required=True)
-    monitor = sub.add_parser("monitor", help="Passive socket snapshot (not ML classification)")
-    monitor.add_argument("--interval", type=float, default=2.)
-    monitor.add_argument("--iterations", type=int)
-    replay = sub.add_parser("replay", help="Score a compatible flow CSV with named-column trained pipeline")
+
+def run_monitor(interval: float, iterations: int | None) -> None:
+    print("Passive connection monitor. No traffic is blocked or modified.")
+    count = 0
+    while iterations is None or count < iterations:
+        events = snapshot_connections()
+        print(json.dumps([event_to_dict(e) for e in events], indent=2))
+        count += 1
+        if iterations is None or count < iterations:
+            time.sleep(interval)
+
+
+def run_replay(csv_path: str, model_path: str, output_path: str | None) -> None:
+    scored = score_csv(csv_path, model_path)
+    if output_path:
+        target = Path(output_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        scored.to_csv(target, index=False)
+        print(f"Saved scored rows to {target}")
+    else:
+        print(scored.head(20).to_string(index=False))
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Passive Windows IDS prototype for COMP1818 EvoNIDS."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    monitor = subparsers.add_parser("monitor", help="Show passive local socket telemetry.")
+    monitor.add_argument("--interval", type=float, default=2.0)
+    monitor.add_argument("--iterations", type=int, default=None)
+
+    replay = subparsers.add_parser(
+        "replay", help="Score UNSW-NB15-compatible CSV rows with a trained pipeline."
+    )
     replay.add_argument("--csv", required=True)
     replay.add_argument("--model", required=True)
-    replay.add_argument("--output")
-    watch = sub.add_parser("watch-flows", help="Score completed appended flow CSV records")
-    watch.add_argument("--csv", required=True)
-    watch.add_argument("--model", required=True)
-    watch.add_argument("--interval", type=float, default=1.)
-    watch.add_argument("--iterations", type=int)
-    watch.add_argument("--threshold", type=float, default=.5)
-    watch.add_argument("--output", help="Append JSONL decisions")
+    replay.add_argument("--output", default=None)
+
+    flow = subparsers.add_parser("watch-flows", help="Score complete new rows from externally exported compatible flow CSV.")
+    flow.add_argument("--csv", required=True)
+    flow.add_argument("--model", required=True)
+    flow.add_argument("--interval", type=float, default=1.0)
+    flow.add_argument("--iterations", type=int, default=None)
+    flow.add_argument("--threshold", type=float, default=0.5)
+    flow.add_argument("--output", default=None, help="Append JSONL predictions to this file")
+
     return parser
 
-def main():
-    a = build_parser().parse_args()
-    if a.command == "monitor":
-        if a.interval <= 0 or (a.iterations is not None and a.iterations < 1):
-            raise SystemExit("interval and iterations must be positive")
-        print("Passive connections only; no blocking or ML prediction on socket metadata.")
-        i = 0
-        while a.iterations is None or i < a.iterations:
-            print(json.dumps([event_to_dict(x) for x in snapshot_connections()], indent=2))
-            i += 1
-            if a.iterations is None or i < a.iterations:
-                time.sleep(a.interval)
-    elif a.command == "replay":
-        data = score_csv(a.csv, a.model)
-        if a.output:
-            out = Path(a.output); out.parent.mkdir(parents=True, exist_ok=True)
-            data.to_csv(out, index=False)
-            print(f"Wrote {len(data)} predictions: {out}")
-        else:
-            print(data.head(20).to_string(index=False))
-    elif a.command == "watch-flows":
-        total = monitor_compatible_flows(a.csv, a.model, interval=a.interval,
-                                         iterations=a.iterations, threshold=a.threshold,
-                                         output=a.output)
+
+def main() -> None:
+    args = build_parser().parse_args()
+    if args.command == "monitor":
+        run_monitor(args.interval, args.iterations)
+    elif args.command == "replay":
+        run_replay(args.csv, args.model, args.output)
+    elif args.command == "watch-flows":
+        total = monitor_compatible_flows(args.csv, args.model, interval=args.interval,
+                                         iterations=args.iterations, threshold=args.threshold,
+                                         output=args.output)
         print(f"Scored {total} compatible flow(s)")
+
 
 if __name__ == "__main__":
     main()

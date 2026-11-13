@@ -1,0 +1,4 @@
+algorithm,macro_f1_budget_24,macro_f1_budget_300,macro_f1_change,features_budget_24,features_budget_300,reduction_pct_budget_24,reduction_pct_budget_300
+GA,0.861092,0.865394,0.004302,17.8,10.2,57.619048,75.714286
+BPSO,0.857619,0.861518,0.003899,15.6,12.2,62.857143,70.952381
+PSO,0.860211,0.859817,-0.000394,14.6,11.4,65.238095,72.857143

@@ -1,46 +1,252 @@
 # Multi-Objective Evolutionary Feature Selection for Efficient Network Intrusion Detection
 
-**COMP-1818 Artificial Intelligence Applications — University of Greenwich**
+COMP1818 Artificial Intelligence Applications coursework implementation and reproducibility package.
 
-**Repository state:** provisional, awaiting synchronization of the complete canonical source and final five-seed experiment outputs from the Windows development workstation. The downloadable release archive was assembled and smoke-tested separately; **do not treat this repository as full experiment reproduction until the remaining research source has been pushed**.
+## Project objective
 
-## Research
+This project evaluates Genetic Algorithm (GA), Binary Particle Swarm Optimisation (BPSO), Particle Swarm Optimisation (PSO), and NSGA-II feature selection for binary network intrusion detection on UNSW-NB15. The primary objective is to reduce raw network-traffic dimensionality while maintaining predictive performance.
 
-UNSW-NB15 binary network intrusion detection with 42 original predictors (drop `id` and `attack_cat`). Four feature-selection approaches: GA, BPSO, PSO and NSGA-II. Five seeds (42, 101, 202, 303, 404), each with 300 *unique expensive classifier evaluations*.
+The final controlled comparison uses five seeds (`42, 101, 202, 303, 404`) and an equal budget of **300 unique expensive fitness evaluations per optimiser per seed**. Random Forest is used as the wrapper classifier. Full-feature Dummy, Logistic Regression, Random Forest, and XGBoost baselines are also evaluated.
 
-| Classifier / selector | Mean Macro-F1 | Raw features | Feature reduction |
-|---|---:|---:|---:|
-| Full XGBoost | 0.870417 | 42 | 0% |
-| GA + RF | 0.865394 | 10.2 | 75.71% |
-| Full Random Forest | 0.864225 | 42 | 0% |
-| BPSO + RF | 0.861518 | 12.2 | 70.95% |
-| PSO + RF | 0.859817 | 11.4 | 72.86% |
-| NSGA-II + RF | 0.856150 | 10.6 | 74.76% |
+## Main result
 
-GA has the best feature-selection trade-off; full XGBoost has the best absolute mean Macro-F1. Friedman omnibus p=0.178 across 5 seeds did not establish a statistically significant difference among feature selectors. These are reported experimental findings, **not yet independently reproducible from this provisional remote snapshot**.
+GA + Random Forest achieved the strongest feature-selection trade-off:
 
-**Official dataset:** https://research.unsw.edu.au/projects/unsw-nb15-dataset
+- Macro-F1: **0.865394 +/- 0.003952**
+- Mean selected raw predictors: **10.2 / 42**
+- Mean feature reduction: **75.71%**
+- False-positive rate: **0.254795**
+- Full-feature RF Macro-F1: **0.864225 +/- 0.000689**
+- Full-feature XGBoost Macro-F1: **0.870417 +/- 0.000866** (highest absolute predictive result)
 
-Required local filenames: `data/raw/UNSW_NB15_training-set.csv` and `data/raw/UNSW_NB15_testing-set.csv`. Raw datasets are not committed to GitHub.
+The correct interpretation is that GA provides the strongest accuracy-dimensionality trade-off; XGBoost remains the strongest absolute full-feature classifier.
 
-## Windows IDS extension
+## Repository layout
 
-The passive Windows monitor reads local socket metadata (TCP/UDP connections, processes); it does not block network traffic. The ML replay/watch pipeline only classifies records from an **externally exported, schema-compatible flow CSV**, using a matching fitted preprocessing+classifier pipeline. **Windows sockets are not equivalent to the UNSW-NB15 feature vector**; the packet/flow extraction bridge and real trained model export remain required for real-world live classification. A synthetic demo model is strictly a wiring test, not coursework performance evidence.
+```text
+.
+|-- README.md
+|-- requirements.txt
+|-- pyproject.toml
+|-- .gitignore
+|-- report/
+|   |-- COMP1818_EvoNIDS_Report.docx
+|   `-- COMP1818_EvoNIDS_Report.pdf
+|-- docs/
+|   |-- EXPERIMENT_PROTOCOL.md
+|   `-- REPRODUCTION.md
+|-- research/
+|   `-- README.md
+|-- prototype/
+|   |-- windows_ids.py
+|   |-- model_io.py
+|   |-- telemetry.py
+|   |-- replay.py
+|   |-- train_demo_model.py
+|   |-- config/selected_features.json
+|   `-- tests/
+|-- results/
+|   |-- final_summary.csv
+|   |-- budget_effect.csv
+|   |-- generalisation_gap.csv
+|   `-- feature_consensus.csv
+`-- tools/
+    |-- package_existing_project.py
+    `-- verify_submission.py
+```
 
-The full development workstation must sync its canonical source before these commands are available on this GitHub repository:
+## Dataset
+
+Dataset: **UNSW-NB15**
+
+Official source: https://research.unsw.edu.au/projects/unsw-nb15-dataset
+
+Expected local files for the full coursework experiments:
+
+```text
+data/raw/UNSW_NB15_training-set.csv
+data/raw/UNSW_NB15_testing-set.csv
+```
+
+Binary target: `label`.
+
+The identifier `id` and multiclass attack category `attack_cat` are excluded from the binary predictor set, leaving **42 raw predictors**.
+
+The raw dataset is intentionally not bundled in this repository package. Download it from the official source and place the two CSV files under `data/raw/`.
+
+## Python environment
+
+The coursework experiments were developed with Python 3.12.
+
+### Windows / Git Bash
+
+```bash
+python -m venv .venv
+source .venv/Scripts/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### Windows PowerShell
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### Linux
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+## Tests
 
 ```bash
 python -m pytest
-python -m prototype.train_demo_model
-python -m prototype.windows_ids monitor --interval 2 --iterations 3
-python -m prototype.windows_ids replay --csv results/demo_rows.csv --model models/demo_pipeline.joblib
-python -m prototype.windows_ids watch-flows --csv results/demo_rows.csv --model models/demo_pipeline.joblib --iterations 1 --output results/alerts.jsonl
 ```
 
-## Final coursework submission
+For the curated submission package, verify the expected release structure with:
 
-Submit the **four-page + references PDF** to Moodle. Include a link to this public repository and the official dataset within the PDF. Full source and model/results evidence must be synchronized and verified before the tutor relies on this repository for rerunning the final research results.
+```bash
+python tools/verify_submission.py
+```
 
-## Source upload from canonical Windows project
+## Full experiment commands
 
-From `C:/Users/Francesco/EvoNIDS_COMP1818_Phase1/EvoNIDS_COMP1818`, first merge the vetted prototype/release package into the same canonical project, then check `.gitignore`, use `git status`, and push source, results and report to this repository. Avoid committing local `.venv`, caches, raw data, credentials or machine-specific generated outputs. Preserve your original project; do not create competing canonical copies.
+The canonical local project contains the complete research implementation. After the repository is populated from that canonical project, the principal commands are:
+
+### Full-feature baselines
+
+```bash
+python -m research.src.run_full_feature_baselines \
+  --train data/raw/UNSW_NB15_training-set.csv \
+  --test data/raw/UNSW_NB15_testing-set.csv \
+  --seeds 42 101 202 303 404 \
+  --output-dir results/full_feature_baselines
+```
+
+### Equal-budget GA / BPSO / PSO comparison
+
+```bash
+python -m research.src.run_fair_budget_suite \
+  --train data/raw/UNSW_NB15_training-set.csv \
+  --test data/raw/UNSW_NB15_testing-set.csv \
+  --seeds 42 101 202 303 404 \
+  --budget 300 \
+  --population 8 \
+  --search-train-size 20000 \
+  --search-valid-size 8000 \
+  --output-dir results/fair_budget_300
+```
+
+### NSGA-II
+
+```bash
+python -m research.src.run_nsga2_suite \
+  --train data/raw/UNSW_NB15_training-set.csv \
+  --test data/raw/UNSW_NB15_testing-set.csv \
+  --seeds 42 101 202 303 404 \
+  --budget 300 \
+  --population 20 \
+  --search-train-size 20000 \
+  --search-valid-size 8000 \
+  --output-dir results/nsga2_300
+```
+
+### Rebuild final analysis
+
+```bash
+python -m research.src.analyse_final_results
+python -m research.src.statistical_analysis
+python -m research.src.build_final_report_tables
+```
+
+## Windows IDS prototype
+
+The `prototype/` directory provides a **passive, defensive Windows IDS prototype** with two roles:
+
+1. `replay`: run a trained scikit-learn pipeline against UNSW-NB15-compatible CSV rows.
+2. `monitor`: display passive local TCP/UDP connection telemetry obtained through `psutil` without blocking traffic or changing firewall rules.
+
+The live Windows telemetry is deliberately separated from the coursework benchmark model because Windows socket telemetry does not natively provide all UNSW-NB15 engineered features. It is therefore a prototype integration layer, not a claim that the benchmark model can classify arbitrary live sockets without a compatible flow-feature extractor.
+
+Run:
+
+```bash
+python -m prototype.windows_ids --help
+python -m prototype.windows_ids monitor --interval 2
+python -m prototype.windows_ids replay --csv path/to/unsw_compatible.csv --model models/ga_rf_pipeline.joblib
+```
+
+A synthetic demonstration model can be created only for smoke-testing the prototype wiring:
+
+```bash
+python -m prototype.train_demo_model --output models/demo_pipeline.joblib
+```
+
+Synthetic demo results are **not** coursework benchmark results.
+
+## Reproducible submission build
+
+From the canonical local project root, use:
+
+```bash
+python tools/package_existing_project.py --source . --destination ../COMP1818_EvoNIDS_Submission
+```
+
+The packager excludes machine-specific and unnecessary material such as `.venv`, caches, IDE metadata, Node modules, temporary logs, build output, and Python bytecode while preserving research source, tests, results, report material, prototype code, and reproducibility documentation.
+
+See `docs/REPRODUCTION.md` for a clean-room verification procedure.
+
+## Coursework delivery
+
+The formal Moodle submission is the report PDF. The report should contain:
+
+- a clearly labelled GitHub implementation link;
+- the official UNSW-NB15 dataset link;
+- enough detail for the teaching team to map the report claims to code and result files.
+
+Do **not** upload the code archive to Moodle unless the teaching team explicitly requests it; keep the implementation available through the GitHub link used in the report.
+
+## Academic integrity and AI use
+
+The report includes the required 60-100 word reflection on generative-AI use. Experimental outputs are generated by the implemented Python pipeline; AI assistance is described as development, explanation, review, and writing support rather than as a source of experimental measurements.
+
+## Streaming-compatible flow integration (new)
+
+`watch-flows` reads **only newly completed rows** appended to a CSV by an independently configured network-flow exporter and passes them through a persisted, named-column scikit-learn pipeline. This is a *near-real-time input interface*, not an implementation of UNSW-NB15 packet-derived features. Its exact feature schema must match the model's expected `feature_names_in_`.
+
+```bash
+python -m prototype.train_demo_model
+python -m prototype.windows_ids watch-flows \
+  --csv results/demo_rows.csv \
+  --model models/demo_pipeline.joblib \
+  --iterations 1 \
+  --output results/demo_alerts.jsonl
+```
+
+The default decision threshold is 0.5. Override with `--threshold 0.7`. The CSV exporter must append complete newline-terminated records without multiline quoted values; only completed records are scored. Replaying the synthetic model demonstrates connectivity only, not scientific intrusion detection performance. **Do not present this as live UNSW-NB15 classification from Windows sockets.** A production adapter still requires packet capture (e.g. consented Npcap), bidirectional session aggregation, and feature-by-feature compatibility validation; historical contextual counters cannot be invented from socket snapshots. There is no automatic blocking.
+
+## Tutor reproducibility: source provenance / current limitations
+
+This release includes the source from the earlier EvoNIDS Python/React project archives plus the Windows proof-of-integration, report, and derived summary tables. The **final** 300-budget optimisation suites, NSGA-II implementation and trained final GA-RF pipeline were produced on the original Windows development workstation and are **not present in the available archived sources**. Consequently the final reported Macro-F1 results are documented evidence, but their full-run reproduction is *not yet available* from this packaged snapshot. Before citing this repository as fully reproducible, merge the latest local `research/src` code and complete per-seed `results` folders, preserve one canonical project, and run the clean-room verification using the official dataset. Do not substitute the synthetic demo model for the trained final model.
+
+To update the canonical GitHub repository from the actual workstation:
+
+```bash
+git remote -v
+git remote add origin https://github.com/FrancescoGuerriero/Multi-Objective-Evolutionary-Feature-Selection-for-Efficient-Network-Intrusion-Detection.git  # only if origin does not exist
+git status --short
+git add README.md .gitignore pyproject.toml requirements.txt backend frontend prototype research docs tools results report
+git diff --cached --stat
+git commit -m "Add reproducible EvoNIDS research and Windows IDS prototype"
+git push -u origin main
+```
+
+Verify before pushing that raw UNSW files, `.venv`, synthetic/trained model artifacts (unless explicitly approved for distribution), secrets and generated caches are not staged. The `report/` PDF should link to this **public** repository and the official dataset source before final Moodle submission.
