@@ -1,0 +1,5 @@
+{
+  "name": "consensus_10_for_prototype",
+  "purpose": "Synthetic wiring only; NOT the final per-seed GA-selected subset",
+  "features": ["ct_srv_dst", "sbytes", "dbytes", "ct_srv_src", "smean", "ct_dst_sport_ltm", "ct_src_dport_ltm", "ct_dst_src_ltm", "dloss", "service"]
+}
