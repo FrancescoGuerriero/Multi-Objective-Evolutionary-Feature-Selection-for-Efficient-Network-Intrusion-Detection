@@ -167,6 +167,16 @@ python -m research.src.statistical_analysis
 python -m research.src.build_final_report_tables
 ```
 
+## Integrated Windows React dashboard
+
+The **React dashboard and FastAPI API are served together on localhost port 8000**. In PowerShell from the repository root, after activating Python 3.12 virtual environment and running `python -m pip install -r requirements.txt`, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/start_windows_dashboard.ps1
+```
+
+Open **http://127.0.0.1:8000/**. The launcher installs Node dependencies, builds React, and starts FastAPI. The app separates live passive TCP/UDP socket metadata (never ML-classified) from ML-scored compatible flow CSV records (fed by `prototype.windows_ids watch-flows`); the historical experiment table is explicitly labelled. See [dashboard guidance](docs/REACT_DASHBOARD.md).
+
 ## Windows IDS prototype
 
 The `prototype/` directory provides a **passive, defensive Windows IDS prototype** with two roles:
