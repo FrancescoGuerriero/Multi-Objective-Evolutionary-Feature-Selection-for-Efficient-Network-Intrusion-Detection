@@ -10,6 +10,8 @@ from collections import deque
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from prototype.telemetry import event_to_dict, snapshot_connections
@@ -100,3 +102,14 @@ def research_comparison():
         methods = list(csv.DictReader(stream))
     return {"methods": methods, "source": str(SUMMARY.relative_to(ROOT)),
             "note": "Historical five-seed final test means; not current live IDS performance"}
+
+
+# Serve the Vite production build from the same read-only localhost API origin.
+# The route/mount are intentionally last so /health and /api remain authoritative.
+DIST = ROOT / "frontend" / "dist"
+if (DIST / "index.html").is_file():
+    @app.get("/", include_in_schema=False)
+    def dashboard_home():
+        return FileResponse(DIST / "index.html")
+
+    app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="dashboard_assets")
