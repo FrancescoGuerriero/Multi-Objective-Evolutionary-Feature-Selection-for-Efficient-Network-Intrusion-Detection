@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./styles.css";
 
-const API = "http://127.0.0.1:8000";
+// In Vite development the backend runs separately; in production both share one origin.
+const API = window.location.port === "5173" ? `${window.location.protocol}//${window.location.hostname}:8000` : "";
 
 type ProjectInfo = { title: string; algorithms: string[]; status: string; default_repeated_runs: number };
 type DataStatus = { ready_for_baselines: boolean; train_present: boolean; test_present: boolean };
