@@ -1,11 +1,20 @@
-# Release verification
+# EvoNIDS GitHub reproducibility and IDS integration status
 
-* GitHub repository: public; full canonical code synchronization pending.
-* Archived research source available from previous EvoNIDS archives: preprocessing, GA/BPSO/PSO baseline components, backend and React scaffold.
-* Final 300-budget search scripts and NSGA-II source: not in the archived snapshot; remain on the developer's Windows workstation.
-* Local release package smoke test: 14 Python tests passed; synthetic trained model generated; 20 compatible CSV flow rows scored via append-only watcher; passive socket monitor completed one snapshot.
-* Live alerting requires externally generated **feature-compatible** flow CSVs and a trained production-model export. No packet-sniffing or firewall blocking has been claimed.
-* Official UNSW-NB15 dataset must be obtained from the source link in README.
-* 4-page PDF should be updated to link to the public repository before final Moodle submission.
+Source snapshot combines earlier archived EvoNIDS research code, the archived coursework report and results, and a separately developed defensive Windows prototype. It does **not** contain the latest Windows-only fair-budget optimisation suite, NSGA-II implementation or trained final GA model. No claim of fully reproducing the five-seed outcomes from this archive is made until the canonical source is synchronized.
 
-**Reproducibility gate:** upload full canonical source, verify dependency installation on clean Windows Python 3.12, run the published test suite, and compare regenerated per-seed CSV/JSON outputs with reported summaries.
+## Verified in the release build environment
+
+- Research tests and prototype tests: passing
+- Backend FastAPI endpoints: passing
+- Synthetic Random Forest pipeline creation and schema-compatible replay/watch: passing
+- Passive connection monitor: executes in this environment (Windows privileges/process visibility may differ)
+- Flow watcher recorded 20 scored synthetic rows once, with distinct socket and CSV telemetry paths
+
+## Not verified here
+
+- True clean Windows fresh-venv PyPI installation, because this execution container has network resolution restrictions
+- React production build, because npm packages are absent and cannot be installed from the network here
+- Real Windows packet capture and UNSW-compatible flow extraction (not implemented)
+- Full 300-budget experiments (latest canonical local files not available)
+
+The dashboard is localhost-only by design. Socket data includes IP addresses, ports and process names and should not be exposed publicly without access controls. No firewall modifications or automated blocking are performed.

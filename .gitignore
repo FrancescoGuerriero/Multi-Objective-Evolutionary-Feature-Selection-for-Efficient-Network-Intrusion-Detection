@@ -23,3 +23,8 @@ models/*.joblib
 data/raw/*.csv
 data/raw/*.pcap
 data/raw/*.pcapng
+# Sensitive local socket and inference telemetry; never publish
+results/*.jsonl
+results/demo_*.csv
+# OS-owned packet capture artifacts
+data/raw/*.cap

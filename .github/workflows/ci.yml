@@ -1,0 +1,32 @@
+name: EvoNIDS reproducibility smoke checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - run: python tools/verify_submission.py
+      - run: python -m pytest -q research/tests prototype/tests backend/tests
+      - run: python -m prototype.train_demo_model
+      - run: python -m prototype.windows_ids watch-flows --csv results/demo_rows.csv --model models/demo_pipeline.joblib --iterations 1 --output results/alerts.jsonl
+  react-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend

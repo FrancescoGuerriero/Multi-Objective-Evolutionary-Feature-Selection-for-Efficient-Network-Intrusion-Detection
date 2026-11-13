@@ -250,3 +250,31 @@ git push -u origin main
 ```
 
 Verify before pushing that raw UNSW files, `.venv`, synthetic/trained model artifacts (unless explicitly approved for distribution), secrets and generated caches are not staged. The `report/` PDF should link to this **public** repository and the official dataset source before final Moodle submission.
+
+## Integrated local React dashboard (FastAPI + Vite)
+
+The dashboard separates **live passive Windows socket telemetry** from **ML-scored compatible CSV flows** and displays the stored five-seed research comparison. No live connection is classified as an attack using incomplete socket fields.
+
+In terminal 1 (from the project root):
+
+```bash
+python -m pip install -r requirements.txt
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+In terminal 2:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`. The dashboard polls the local API on port 8000 every five seconds and reads `results/alerts.jsonl` as its compatible-flow decision stream. In terminal 3, run the demo commands below; the synthetic demo must not be represented as real traffic classification:
+
+```bash
+python -m prototype.train_demo_model
+python -m prototype.windows_ids watch-flows --csv results/demo_rows.csv --model models/demo_pipeline.joblib --iterations 1 --output results/alerts.jsonl
+```
+
+The API is intentionally designed for `127.0.0.1` only and exposes **read-only** routes: `/health`, `/api/project`, `/api/data/status`, `/api/ids/status`, `/api/ids/connections`, `/api/ids/alerts`, and `/api/research/comparison`. Do **not** bind it to all network interfaces without implementing authentication and access controls; exposed process names, IPs and local network connections are sensitive telemetry. This dashboard is an integration demonstration, not a production-certified IDS.
