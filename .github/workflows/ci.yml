@@ -30,3 +30,32 @@ jobs:
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
+
+  integrated-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm install --no-audit --no-fund
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: python -m pip install -r requirements.txt
+      - name: Verify integrated single-origin UI and API
+        run: |
+          python - <<'PY'
+          from fastapi.testclient import TestClient
+          from backend.app.main import app
+          client = TestClient(app)
+          html = client.get("/")
+          assert html.status_code == 200, html.status_code
+          assert "id=\"root\"" in html.text
+          assert "status" in client.get("/health").json()
+          assert client.get("/api/research/comparison").status_code == 200
+          print("Integrated React + API test: PASS")
+          PY
