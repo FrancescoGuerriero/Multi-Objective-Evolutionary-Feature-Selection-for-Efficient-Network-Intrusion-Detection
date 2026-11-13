@@ -22,3 +22,16 @@ def test_research():
 
 def test_alerts():
     assert client.get('/api/ids/alerts').status_code == 200
+
+
+def test_dashboard_does_not_shadow_api():
+    assert client.get("/health").json()["status"] == "ok"
+    assert client.get("/api/project").status_code == 200
+
+
+def test_integrated_dashboard_when_built():
+    from backend.app.main import DIST
+    if (DIST / "index.html").is_file():
+        response = client.get("/")
+        assert response.status_code == 200
+        assert '<div id="root"></div>' in response.text
